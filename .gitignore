@@ -1,0 +1,6 @@
+# Python
+venv
+
+# IntelliJ IDEA
+.idea
+*.iml
