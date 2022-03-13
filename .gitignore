@@ -4,3 +4,6 @@ venv
 # IntelliJ IDEA
 .idea
 *.iml
+
+# Excel
+*.xlsx#
