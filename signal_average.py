@@ -1,5 +1,7 @@
 import sys
 
+from model.series_workbook import SeriesWorkbook
+
 
 def main():
     if len(sys.argv) < 1:
@@ -9,6 +11,10 @@ def main():
 
     print('Signal Average')
     print('Processing workbook: %s' % workbook_path)
+
+    signals = SeriesWorkbook()
+    signals.open_workbook(workbook_path)
+    signals.process_sheet(1)
 
 
 if __name__ == '__main__':
