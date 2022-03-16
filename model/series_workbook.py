@@ -1,4 +1,5 @@
 import math
+import os.path
 
 import numpy as np
 from openpyxl import load_workbook
@@ -9,12 +10,15 @@ class SeriesWorkbook:
     MAX_SERIES = 5
 
     def __init__(self):
+        self.workbook_path = None
         self.workbook = None
 
-    def open_workbook(self, path):
-        self.workbook = load_workbook(path)
-        sheetnames = self.workbook.sheetnames[1:]
-        print('Sheets: %s' % ' '.join(sheetnames))
+    def open_workbook(self, workbook_path):
+        self.workbook_path = workbook_path
+        self.workbook = load_workbook(workbook_path)
+
+        sheet_names = self.workbook.sheetnames[1:]
+        print('Sheets: %s' % ' '.join(sheet_names))
 
     def process_sheet(self, sheet_n):
         sheet = self.workbook.worksheets[sheet_n]
@@ -24,9 +28,7 @@ class SeriesWorkbook:
             series.append(self.create_series(sheet, n))
 
         average = self.create_average(series)
-
-        for n in range(len(average.t)):
-            print('%f;%f;%f' % (average.t[n], average.x[n], average.y[n]))
+        self.save_series(sheet, average)
 
     def create_series(self, sheet, series_n):
         base_column = self.get_series_base_column(series_n)
@@ -65,6 +67,18 @@ class SeriesWorkbook:
             average.y.append(y_avg)
 
         return average
+
+    def save_series(self, sheet, series, series_n=5):
+        base_column = self.get_series_base_column(series_n)
+        base_row = self.get_series_base_row()
+
+        for n in range(len(series.t)):
+            sheet.cell(row=base_row + n, column=base_column).value = series.t[n]
+            sheet.cell(row=base_row + n, column=base_column + 1).value = series.x[n]
+            sheet.cell(row=base_row + n, column=base_column + 2).value = series.y[n]
+
+        basename, extension = os.path.splitext(self.workbook_path)
+        self.workbook.save(basename + '_avg' + extension)
 
     def load_single_series(self, sheet, column, row_start, row_end):
         values = []
