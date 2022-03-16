@@ -20,11 +20,19 @@ class SeriesWorkbook:
         sheet_names = self.workbook.sheetnames[1:]
         print('Sheets: %s' % ' '.join(sheet_names))
 
-    def process_sheet(self, sheet_n):
-        sheet = self.workbook.worksheets[sheet_n]
+    def process_workbook(self):
+        for sheet in self.workbook.worksheets[1:]:
+            print("Processing sheet: %s" % sheet.title)
+            self.process_sheet(sheet)
+
+        basename, extension = os.path.splitext(self.workbook_path)
+        self.workbook.save(basename + '_avg' + extension)
+
+    def process_sheet(self, sheet):
         series = []
 
         for n in range(0, self.MAX_SERIES):
+            print("Processing series: %d" % n)
             series.append(self.create_series(sheet, n))
 
         average = self.create_average(series)
@@ -76,9 +84,6 @@ class SeriesWorkbook:
             sheet.cell(row=base_row + n, column=base_column).value = series.t[n]
             sheet.cell(row=base_row + n, column=base_column + 1).value = series.x[n]
             sheet.cell(row=base_row + n, column=base_column + 2).value = series.y[n]
-
-        basename, extension = os.path.splitext(self.workbook_path)
-        self.workbook.save(basename + '_avg' + extension)
 
     def load_single_series(self, sheet, column, row_start, row_end):
         values = []

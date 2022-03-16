@@ -14,7 +14,7 @@ def main():
 
     signals = SeriesWorkbook()
     signals.open_workbook(workbook_path)
-    signals.process_sheet(1)
+    signals.process_workbook()
 
 
 if __name__ == '__main__':
