@@ -70,9 +70,14 @@ class SeriesWorkbook:
             x_avg = sum(x_values) / len(x_values)
             y_avg = sum(y_values) / len(y_values)
 
+            bx = math.sqrt(sum([(x - x_avg)**2 for x in x_values]) / len(x_values))
+            by = math.sqrt(sum([(y - y_avg)**2 for y in y_values]) / len(y_values))
+
             average.t.append(t)
             average.x.append(x_avg)
             average.y.append(y_avg)
+            average.bx.append(bx)
+            average.by.append(by)
 
         return average
 
@@ -84,6 +89,8 @@ class SeriesWorkbook:
             sheet.cell(row=base_row + n, column=base_column).value = series.t[n]
             sheet.cell(row=base_row + n, column=base_column + 1).value = series.x[n]
             sheet.cell(row=base_row + n, column=base_column + 2).value = series.y[n]
+            sheet.cell(row=base_row + n, column=base_column + 3).value = series.bx[n]
+            sheet.cell(row=base_row + n, column=base_column + 4).value = series.by[n]
 
     def load_single_series(self, sheet, column, row_start, row_end):
         values = []
@@ -109,3 +116,5 @@ class Series:
         self.y = []
         self.xt = None
         self.yt = None
+        self.bx = []
+        self.by = []
