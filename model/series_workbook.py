@@ -1,8 +1,9 @@
 import math
-import os.path
 
 import numpy as np
 from openpyxl import load_workbook
+from openpyxl.utils import column_index_from_string
+from openpyxl.utils.cell import coordinate_from_string
 from scipy import interpolate
 
 
@@ -12,72 +13,87 @@ class SeriesWorkbook:
     def __init__(self):
         self.workbook_path = None
         self.workbook = None
+        self.sheet = None
 
     def open_workbook(self, workbook_path):
         self.workbook_path = workbook_path
         self.workbook = load_workbook(workbook_path)
 
-        sheet_names = self.workbook.sheetnames[1:]
-        print('Sheets: %s' % ' '.join(sheet_names))
+    def set_sheet(self, sheet_name):
+        self.sheet = self.workbook[sheet_name]
 
-    def process_workbook(self):
-        for sheet in self.workbook.worksheets[1:]:
-            print("Processing sheet: %s" % sheet.title)
-            self.process_sheet(sheet)
+    def process_series(self, data_wrapper):
+        series_letters_all = [letter for letter in data_wrapper.keys() if len(letter) == 1]
+        base_letter = series_letters_all[0]
+        series_letters = series_letters_all[1:]
+        columns_count = len(data_wrapper[base_letter])
 
-        basename, extension = os.path.splitext(self.workbook_path)
-        self.workbook.save(basename + '_avg' + extension)
+        for letter in series_letters:
+            if len(data_wrapper[letter]) != columns_count:
+                raise ValueError('All series needs to have same length!')
 
-    def process_sheet(self, sheet):
         series = []
 
-        for n in range(0, self.MAX_SERIES):
-            print("Processing series: %d" % n)
-            series.append(self.create_series(sheet, n))
+        for series_n in range(columns_count):
+            print('Processing column: %d of %d' % (series_n + 1, columns_count))
 
+            serie = Series()
+
+            start_cell = data_wrapper[base_letter][series_n]
+            print('Loading: %s (base cell %s)' % (base_letter, start_cell))
+
+            base_values = self.load_single_serie(start_cell)
+            serie.add_base(base_letter, base_values)
+
+            for letter in series_letters:
+                start_cell = data_wrapper[letter][series_n]
+                print('Loading: %s (base cell %s)' % (letter, start_cell))
+
+                serie_values = self.load_single_serie(start_cell)
+                serie.add_series(letter, serie_values)
+
+            for letter in series_letters:
+                print('Interpolating %s(%s)' % (letter, base_letter))
+                interpolation = interpolate.interp1d(serie.base, serie.series[letter], bounds_error=False)
+                serie.add_interpolation(letter, interpolation)
+
+            series.append(serie)
+
+        print('Create averages')
         average = self.create_average(series)
-        self.save_series(sheet, average)
 
-    def create_series(self, sheet, series_n):
-        base_column = self.get_series_base_column(series_n)
-        base_row = self.get_series_base_row()
+        print('Saving results')
+        results = [r for r in data_wrapper.keys() if len(r) == 5]
 
-        series = Series()
-        series.t = self.load_single_series(sheet, base_column, base_row, sheet.max_row)
-        series.x = self.load_single_series(sheet, base_column + 1, base_row, sheet.max_row)
-        series.y = self.load_single_series(sheet, base_column + 2, base_row, sheet.max_row)
-
-        series.xt = interpolate.interp1d(series.t, series.x, bounds_error=False)
-        series.yt = interpolate.interp1d(series.t, series.y, bounds_error=False)
-
-        return series
+        for result in results:
+            start_cell = data_wrapper[result]
+            letter, result_type = result.split('_')
+            if result_type == 'avg':
+                print('Average %s (%s)' % (letter, start_cell))
+                # self.save_series(sheet, average)
 
     def create_average(self, series):
         average = Series()
-        t_start = series[0].t[0]
-        t_end = series[0].t[-1]
+        series_letters = series[0].series.keys()
+
+        x_start = series[0].base[0]
+        x_end = series[0].base[-1]
         samples = 0
 
         for s in series:
-            t_start = min(t_start, s.t[0])
-            t_end = max(t_end, s.t[-1])
-            samples = max(samples, len(s.t))
+            x_start = min(x_start, s.base[0])
+            x_end = max(x_end, s.base[-1])
+            samples = max(samples, len(s.base))
 
-        for t in np.linspace(t_start, t_end, num=samples):
-            x_values = [s.xt(t) for s in series if not math.isnan(s.xt(t))]
-            y_values = [s.yt(t) for s in series if not math.isnan(s.yt(t))]
+        for x in np.linspace(x_start, x_end, num=samples):
+            average.base.append(x)
 
-            x_avg = sum(x_values) / len(x_values)
-            y_avg = sum(y_values) / len(y_values)
-
-            bx = math.sqrt(sum([(x - x_avg)**2 for x in x_values]) / len(x_values))
-            by = math.sqrt(sum([(y - y_avg)**2 for y in y_values]) / len(y_values))
-
-            average.t.append(t)
-            average.x.append(x_avg)
-            average.y.append(y_avg)
-            average.bx.append(bx)
-            average.by.append(by)
+            for letter in series_letters:
+                values = [s.interpolation[letter](x) for s in series if not math.isnan(s.interpolation[letter](x))]
+                v_avg = sum(values) / len(values)
+                dev = math.sqrt(sum([(v - v_avg) ** 2 for v in values]) / len(values))
+                average.append_series(letter, v_avg)
+                average.append_deviation(letter, dev)
 
         return average
 
@@ -92,29 +108,53 @@ class SeriesWorkbook:
             sheet.cell(row=base_row + n, column=base_column + 3).value = series.bx[n]
             sheet.cell(row=base_row + n, column=base_column + 4).value = series.by[n]
 
-    def load_single_series(self, sheet, column, row_start, row_end):
+    def load_single_serie(self, base_cell_str):
+        coordinates = coordinate_from_string(base_cell_str)
+        column = column_index_from_string(coordinates[0])
+        start_row = coordinates[1]
+
         values = []
 
-        for row in range(row_start, row_end):
-            value = sheet.cell(column=column, row=row).value
+        for row in range(start_row, self.sheet.max_row):
+            value = self.sheet.cell(column=column, row=row).value
             values.append(value)
 
         values = [v for v in values if v is not None]
         return np.array(values)
 
-    def get_series_base_column(self, series_n):
-        return 2 + series_n * 3
-
-    def get_series_base_row(self):
-        return 5
-
 
 class Series:
     def __init__(self):
-        self.t = []
+        self.base_letter = None
+        self.base = []
+        self.series = {}
+        self.interpolation = {}
+        self.deviation = {}
         self.x = []
         self.y = []
         self.xt = None
         self.yt = None
         self.bx = []
         self.by = []
+
+    def add_base(self, letter, values):
+        self.base_letter = letter
+        self.base = values
+
+    def add_series(self, letter, values):
+        self.series[letter] = values
+
+    def append_series(self, letter, value):
+        if letter not in self.series:
+            self.series[letter] = []
+        self.series[letter].append(value)
+
+    def add_interpolation(self, letter, function):
+        if letter not in self.series.keys():
+            raise ValueError('Missing values for letter: %s', letter)
+        self.interpolation[letter] = function
+
+    def append_deviation(self, letter, value):
+        if letter not in self.deviation:
+            self.deviation[letter] = []
+        self.deviation[letter].append(value)
