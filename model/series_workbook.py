@@ -109,9 +109,7 @@ class SeriesWorkbook:
             sheet.cell(row=base_row + n, column=base_column + 4).value = series.by[n]
 
     def load_single_serie(self, base_cell_str):
-        coordinates = coordinate_from_string(base_cell_str)
-        column = column_index_from_string(coordinates[0])
-        start_row = coordinates[1]
+        column, start_row = self.get_col_and_row(base_cell_str)
 
         values = []
 
@@ -122,6 +120,11 @@ class SeriesWorkbook:
         values = [v for v in values if v is not None]
         return np.array(values)
 
+    def get_col_and_row(self, cell_str):
+        coordinates = coordinate_from_string(cell_str)
+        column = column_index_from_string(coordinates[0])
+        row = coordinates[1]
+        return column, row
 
 class Series:
     def __init__(self):
