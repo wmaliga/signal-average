@@ -75,8 +75,6 @@ class SeriesWorkbook:
                 print('Deviation %s (%s)' % (letter, start_cell))
                 self.save_values(start_cell, average.get_deviation(letter))
 
-        self.workbook.save(self.workbook_path)
-
     def create_average(self, series):
         average = Series()
         average.base_letter = series[0].base_letter
@@ -108,6 +106,9 @@ class SeriesWorkbook:
 
         for n in range(len(values)):
             self.sheet.cell(row=start_row + n, column=column).value = values[n]
+
+    def save_workbook(self, workbook_path):
+        self.workbook.save(workbook_path)
 
     def load_single_serie(self, base_cell_str):
         column, start_row = self.get_col_and_row(base_cell_str)

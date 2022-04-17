@@ -1,5 +1,3 @@
-import sys
-
 from data.config import data
 from model.series_workbook import SeriesWorkbook
 
@@ -10,6 +8,7 @@ def main():
 
     for workbook_basename, sheets in data.items():
         workbook_path = 'data/{}.xlsx'.format(workbook_basename)
+        output_path = 'data/{}_avg.xlsx'.format(workbook_basename)
         print('Workbook: ' + workbook_path)
         workbook.open_workbook(workbook_path)
 
@@ -25,6 +24,8 @@ def main():
                         print('{}: {} -> {}'.format(series_letter, ','.join(series[series_letter]), series[series_letter + '_avg']))
 
                 workbook.process_series(series)
+
+        workbook.save_workbook(output_path)
 
 
 if __name__ == '__main__':
