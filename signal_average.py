@@ -1,31 +1,31 @@
 from data.config import data
-from model.series_workbook import SeriesWorkbook
+from model.workbook_wrapper import WorkbookWrapper
 
 
 def main():
     print('Signal Average')
-    workbook = SeriesWorkbook()
+    wrapper = WorkbookWrapper()
 
     for workbook_basename, sheets in data.items():
         workbook_path = 'data/{}.xlsx'.format(workbook_basename)
         output_path = 'data/{}_avg.xlsx'.format(workbook_basename)
         print('Workbook: ' + workbook_path)
-        workbook.open_workbook(workbook_path)
+        wrapper.open_workbook(workbook_path)
 
         for sheet_name, sheet in sheets.items():
             print('Sheet: ' + sheet_name)
-            workbook.set_sheet(sheet_name)
+            wrapper.set_sheet(sheet_name)
 
-            for series_n, series in sheet.items():
-                print('Series: ' + str(series_n))
+            for data_set_n, data_set in sheet.items():
+                print('Data set: ' + str(data_set_n))
 
-                for series_letter in series:
-                    if len(series_letter) == 1:
-                        print('{}: {} -> {}'.format(series_letter, ','.join(series[series_letter]), series[series_letter + '_avg']))
+                for letter, values in data_set.items():
+                    if len(letter) == 1:
+                        print('{}: {}'.format(letter, ','.join(values)))
 
-                workbook.process_series(series)
+                wrapper.process_data_set(data_set)
 
-        workbook.save_workbook(output_path)
+        wrapper.save_workbook(output_path)
 
 
 if __name__ == '__main__':
