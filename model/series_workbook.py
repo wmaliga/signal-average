@@ -71,6 +71,9 @@ class SeriesWorkbook:
             if result_type == 'avg':
                 print('Average %s (%s)' % (letter, start_cell))
                 self.save_values(start_cell, average.get_series(letter))
+            if result_type == "dev":
+                print('Deviation %s (%s)' % (letter, start_cell))
+                self.save_values(start_cell, average.get_deviation(letter))
 
         self.workbook.save(self.workbook_path)
 
@@ -162,3 +165,6 @@ class Series:
         if letter not in self.deviation:
             self.deviation[letter] = []
         self.deviation[letter].append(value)
+
+    def get_deviation(self, letter):
+        return self.deviation[letter]

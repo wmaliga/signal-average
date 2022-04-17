@@ -7,7 +7,9 @@ data = {
                 "y": ["D5", "G5", "J5", "M5", "P5"],
                 "t_avg": "Q5",
                 "x_avg": "R5",
-                "y_avg": "S5"
+                "y_avg": "S5",
+                "x_dev": "T5",
+                "y_dev": "U5"
             }
         }
     }
