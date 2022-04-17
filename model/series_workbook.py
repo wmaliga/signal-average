@@ -70,10 +70,13 @@ class SeriesWorkbook:
             letter, result_type = result.split('_')
             if result_type == 'avg':
                 print('Average %s (%s)' % (letter, start_cell))
-                # self.save_series(sheet, average)
+                self.save_values(start_cell, average.get_series(letter))
+
+        self.workbook.save(self.workbook_path)
 
     def create_average(self, series):
         average = Series()
+        average.base_letter = series[0].base_letter
         series_letters = series[0].series.keys()
 
         x_start = series[0].base[0]
@@ -97,16 +100,11 @@ class SeriesWorkbook:
 
         return average
 
-    def save_series(self, sheet, series, series_n=5):
-        base_column = self.get_series_base_column(series_n)
-        base_row = self.get_series_base_row()
+    def save_values(self, base_cell_str, values):
+        column, start_row = self.get_col_and_row(base_cell_str)
 
-        for n in range(len(series.t)):
-            sheet.cell(row=base_row + n, column=base_column).value = series.t[n]
-            sheet.cell(row=base_row + n, column=base_column + 1).value = series.x[n]
-            sheet.cell(row=base_row + n, column=base_column + 2).value = series.y[n]
-            sheet.cell(row=base_row + n, column=base_column + 3).value = series.bx[n]
-            sheet.cell(row=base_row + n, column=base_column + 4).value = series.by[n]
+        for n in range(len(values)):
+            self.sheet.cell(row=start_row + n, column=column).value = values[n]
 
     def load_single_serie(self, base_cell_str):
         column, start_row = self.get_col_and_row(base_cell_str)
@@ -146,6 +144,9 @@ class Series:
 
     def add_series(self, letter, values):
         self.series[letter] = values
+
+    def get_series(self, letter):
+        return self.base if letter == self.base_letter else self.series[letter]
 
     def append_series(self, letter, value):
         if letter not in self.series:
