@@ -1,4 +1,5 @@
 from data.config import data
+from model.data_set import data_set_from_map
 from model.workbook_wrapper import WorkbookWrapper
 
 
@@ -16,13 +17,9 @@ def main():
             print('Sheet: ' + sheet_name)
             wrapper.set_sheet(sheet_name)
 
-            for data_set_n, data_set in sheet.items():
+            for data_set_n, data_map in sheet.items():
                 print('Data set: ' + str(data_set_n))
-
-                for letter, values in data_set.items():
-                    if len(letter) == 1:
-                        print('{}: {}'.format(letter, ','.join(values)))
-
+                data_set = data_set_from_map(data_map)
                 wrapper.process_data_set(data_set)
 
         wrapper.save_workbook(output_path)

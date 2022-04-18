@@ -8,9 +8,6 @@ from scipy import interpolate
 
 
 class WorkbookWrapper:
-    LABEL_LENGTH = 1
-    RESULT_LENGTH = 5
-
     def __init__(self):
         self.workbook_path = None
         self.workbook = None
@@ -24,13 +21,12 @@ class WorkbookWrapper:
         self.sheet = self.workbook[sheet_name]
 
     def process_data_set(self, data_set):
-        collections_labels_all = [label for label in data_set.keys() if len(label) == self.LABEL_LENGTH]
-        domain_label = collections_labels_all[0]
-        collections_labels = collections_labels_all[1:]
-        collections_count = len(data_set[domain_label])
+        domain_label = data_set.labels[0]
+        collections_labels = data_set.labels[1:]
+        collections_count = len(data_set.collections_cells[domain_label])
 
         for label in collections_labels:
-            if len(data_set[label]) != collections_count:
+            if len(data_set.collections_cells[label]) != collections_count:
                 raise ValueError('All series needs to have same length!')
 
         collections = []
@@ -40,14 +36,14 @@ class WorkbookWrapper:
 
             collection = CollectionSet()
 
-            start_cell_domain = data_set[domain_label][collection_n]
+            start_cell_domain = data_set.collections_cells[domain_label][collection_n]
             print('Loading: %s (base cell %s)' % (domain_label, start_cell_domain))
 
             domain_values = self.load_single_serie(start_cell_domain)
             collection.add_domain(domain_label, domain_values)
 
             for label in collections_labels:
-                start_cell = data_set[label][collection_n]
+                start_cell = data_set.collections_cells[label][collection_n]
                 print('Loading: %s (base cell %s)' % (label, start_cell))
 
                 collection_values = self.load_single_serie(start_cell)
@@ -65,17 +61,14 @@ class WorkbookWrapper:
         average = self.create_average_set(collections)
 
         print('Saving results')
-        results = [r for r in data_set.keys() if len(r) == self.RESULT_LENGTH]
 
-        for result in results:
-            start_cell = data_set[result]
-            label, result_type = result.split('_')
-            if result_type == 'avg':
-                print('Average %s (%s)' % (label, start_cell))
-                self.save_values(start_cell, average.get_collection(label))
-            if result_type == "dev":
-                print('Deviation %s (%s)' % (label, start_cell))
-                self.save_values(start_cell, average.get_deviation(label))
+        for label, start_cell in data_set.averages_cells.items():
+            print('Average %s (%s)' % (label, start_cell))
+            self.save_values(start_cell, average.get_collection(label))
+
+        for label, start_cell in data_set.deviations_cells.items():
+            print('Deviation %s (%s)' % (label, start_cell))
+            self.save_values(start_cell, average.get_deviation(label))
 
     @staticmethod
     def create_average_set(collections):
