@@ -25,10 +25,6 @@ class WorkbookWrapper:
         collections_labels = data_set.labels[1:]
         collections_count = len(data_set.collections_cells[domain_label])
 
-        for label in collections_labels:
-            if len(data_set.collections_cells[label]) != collections_count:
-                raise ValueError('All series needs to have same length!')
-
         collections = []
 
         for collection_n in range(collections_count):

@@ -1,5 +1,5 @@
 from data.config import data
-from model.data_set import data_set_from_map
+from model.data_set import data_set_from_map, validate_data_set
 from model.workbook_wrapper import WorkbookWrapper
 
 
@@ -20,6 +20,7 @@ def main():
             for data_set_n, data_map in sheet.items():
                 print('Data set: ' + str(data_set_n))
                 data_set = data_set_from_map(data_map)
+                validate_data_set(data_set)
                 wrapper.process_data_set(data_set)
 
         wrapper.save_workbook(output_path)
