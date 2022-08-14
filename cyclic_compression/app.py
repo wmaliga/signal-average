@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy
 from scipy.signal import find_peaks
 
+from common.signal_utils import signal_average
 from common.workbook_wrapper import open_workbook, save_with_suffix, Cell
 from data.config import config
 
@@ -33,12 +34,22 @@ def main():
                 cycles = len(t_series_list)
                 print(f'Split into {cycles} cycles')
 
-                #for i in range(1, cycles):
-                #    plt.plot(t_series_list[i] - t_series_list[i][0], e_series_list[i])
+                t_series_list = t_series_list[1:]
+                e_series_list = e_series_list[1:]
+                l_series_list = l_series_list[1:]
 
-                for i in range(1, cycles):
-                    plt.plot(t_series_list[i] - t_series_list[i][0], l_series_list[i])
+                t_series_list = [t_series - t_series[0] for t_series in t_series_list]
 
+                # for i in range(len(t_series_list)):
+                #     plt.plot(t_series_list[i], e_series_list[i])
+
+                # for i in range(len(t_series_list)):
+                #     plt.plot(t_series_list[i], l_series_list[i])
+
+                # plt.show()
+
+                x_avg_values, y_avg_values, y_dev_values = signal_average(t_series_list, e_series_list)
+                plt.plot(x_avg_values, y_avg_values)
                 plt.show()
 
         save_with_suffix(workbook, "new")
