@@ -23,6 +23,10 @@ class WorkbookWrapper:
     def set_sheet(self, sheet_name: str):
         self.sheet = self.workbook[sheet_name]
 
+    def create_sheet(self, name: str):
+        if name not in self.workbook:
+            self.workbook.create_sheet(name)
+
     def load_single_series(self, base_cell: Cell) -> ndarray:
         values = []
 
@@ -32,6 +36,12 @@ class WorkbookWrapper:
 
         values = [v for v in values if v is not None]
         return np.array(values)
+
+    def write_single_series(self, base_cell: Cell, values: ndarray, override_sheet=None):
+        sheet = self.workbook[override_sheet] if override_sheet else self.sheet
+
+        for n in range(len(values)):
+            sheet.cell(row=base_cell.row + n, column=base_cell.column).value = values[n]
 
 
 def open_workbook(path: str) -> WorkbookWrapper:

@@ -48,9 +48,17 @@ def main():
 
                 # plt.show()
 
-                x_avg_values, y_avg_values, y_dev_values = signal_average(t_series_list, e_series_list)
-                plt.plot(x_avg_values, y_avg_values)
-                plt.show()
+                t_avg_values, e_avg_values, e_dev_values = signal_average(t_series_list, e_series_list)
+                t_avg_values, l_avg_values, l_dev_values = signal_average(t_series_list, l_series_list)
+
+                # plt.plot(t_avg_values, e_avg_values)
+                # plt.plot(t_avg_values, l_avg_values)
+                # plt.show()
+
+                workbook.create_sheet('3-1-3_avg')
+                workbook.write_single_series(Cell('A1'), t_avg_values, override_sheet='3-1-3_avg')
+                workbook.write_single_series(Cell('B1'), e_avg_values, override_sheet='3-1-3_avg')
+                workbook.write_single_series(Cell('C1'), l_avg_values, override_sheet='3-1-3_avg')
 
         save_with_suffix(workbook, "new")
 
