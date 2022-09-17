@@ -9,6 +9,7 @@ from data.config import config
 
 def main():
     print('Cyclic compression calculations')
+    save_steps = False
 
     for workbook_name, sheets in config.items():
         workbook = open_workbook(f'data/{workbook_name}')
@@ -24,9 +25,13 @@ def main():
                 e_series = workbook.load_single_series(Cell(dataset['E']))
                 l_series = workbook.load_single_series(Cell(dataset['L']))
                 minima, _ = find_peaks(-e_series)
-                # plt.plot(t_series, e_series)
-                # plt.plot(t_series[minima], e_series[minima], '.')
-                # plt.show()
+                minima = minima[4::5]
+                if save_steps:
+                    plt.plot(t_series, e_series)
+                    plt.plot(t_series[minima], e_series[minima], '.')
+                    plt.savefig('out/step1.png')
+                    plt.show()
+
                 t_series_list = numpy.split(t_series, minima)
                 e_series_list = numpy.split(e_series, minima)
                 l_series_list = numpy.split(l_series, minima)
@@ -40,25 +45,35 @@ def main():
 
                 t_series_list = [t_series - t_series[0] for t_series in t_series_list]
 
-                # for i in range(len(t_series_list)):
-                #     plt.plot(t_series_list[i], e_series_list[i])
+                if save_steps:
+                    for i in range(len(t_series_list)):
+                        plt.plot(t_series_list[i], e_series_list[i])
+                    plt.savefig('out/step2e.png')
+                    plt.show()
 
-                # for i in range(len(t_series_list)):
-                #     plt.plot(t_series_list[i], l_series_list[i])
-
-                # plt.show()
+                    for i in range(len(t_series_list)):
+                        plt.plot(t_series_list[i], l_series_list[i])
+                    plt.savefig('out/step2l.png')
+                    plt.show()
 
                 t_avg_values, e_avg_values, e_dev_values = signal_average(t_series_list, e_series_list)
                 t_avg_values, l_avg_values, l_dev_values = signal_average(t_series_list, l_series_list)
 
-                # plt.plot(t_avg_values, e_avg_values)
-                # plt.plot(t_avg_values, l_avg_values)
-                # plt.show()
+                if save_steps:
+                    plt.plot(t_avg_values, e_avg_values)
+                    plt.savefig('out/step3e.png')
+                    plt.show()
+
+                    plt.plot(t_avg_values, l_avg_values)
+                    plt.savefig('out/step3l.png')
+                    plt.show()
 
                 workbook.create_sheet('3-1-3_avg')
-                workbook.write_single_series(Cell('A1'), t_avg_values, override_sheet='3-1-3_avg')
-                workbook.write_single_series(Cell('B1'), e_avg_values, override_sheet='3-1-3_avg')
-                workbook.write_single_series(Cell('C1'), l_avg_values, override_sheet='3-1-3_avg')
+                workbook.write_single_series(Cell(dataset['t']), t_avg_values, override_sheet='3-1-3_avg')
+                workbook.write_single_series(Cell(dataset['E']), e_avg_values, override_sheet='3-1-3_avg')
+                workbook.write_single_series(Cell(dataset['L']), l_avg_values, override_sheet='3-1-3_avg')
+
+                save_steps = False
 
         save_with_suffix(workbook, "new")
 
