@@ -17,7 +17,7 @@ def main():
 
         for sheet_name, sheet in sheets.items():
             print(f'Processing sheet: {sheet_name}')
-            workbook.set_sheet('3-1-3')
+            workbook.set_sheet(sheet_name)
 
             for dataset_n, dataset in sheet.items():
                 print(f'Processing dataset #{dataset_n}: {str(list(dataset.values()))}')
@@ -68,10 +68,11 @@ def main():
                     plt.savefig('out/step3l.png')
                     plt.show()
 
-                workbook.create_sheet('3-1-3_avg')
-                workbook.write_single_series(Cell(dataset['t']), t_avg_values, override_sheet='3-1-3_avg')
-                workbook.write_single_series(Cell(dataset['E']), e_avg_values, override_sheet='3-1-3_avg')
-                workbook.write_single_series(Cell(dataset['L']), l_avg_values, override_sheet='3-1-3_avg')
+                sheet_name_avg = f'{sheet_name}_avg'
+                workbook.create_sheet(sheet_name_avg)
+                workbook.write_single_series(Cell(dataset['t']), t_avg_values, override_sheet=sheet_name_avg)
+                workbook.write_single_series(Cell(dataset['E']), e_avg_values, override_sheet=sheet_name_avg)
+                workbook.write_single_series(Cell(dataset['L']), l_avg_values, override_sheet=sheet_name_avg)
 
                 save_steps = False
 
