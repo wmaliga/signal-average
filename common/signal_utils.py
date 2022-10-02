@@ -5,6 +5,11 @@ from numpy import ndarray
 from scipy import interpolate
 
 
+def chunks(_list, chunk_size):
+    for i in range(0, len(_list), chunk_size):
+        yield _list[i:i + chunk_size]
+
+
 def signal_average(x_values: list[ndarray], y_values: list[ndarray]):
     if len(x_values) != len(y_values):
         raise Exception('Both X and Y lists should have equal length')
