@@ -79,18 +79,59 @@ def main():
                             plt.plot(t_series_groups[i][j], l_series_groups[i][j])
                     plt.savefig('out/step3l.png')
                     plt.show()
-                exit(0)
 
-                t_avg_values, e_avg_values, e_dev_values = signal_average(t_series_list, e_series_list)
-                t_avg_values, l_avg_values, l_dev_values = signal_average(t_series_list, l_series_list)
+                t_avg_groups = []
+                e_avg_groups = []
+                e_dev_groups = []
+                l_avg_groups = []
+                l_dev_groups = []
+
+                for i in range(len(t_series_groups)):
+                    t_avg, e_avg, e_dev = signal_average(t_series_groups[i], e_series_groups[i])
+                    t_avg_groups.append(t_avg)
+                    e_avg_groups.append(e_avg)
+                    e_dev_groups.append(e_dev)
+                    t_avg, l_avg, l_dev = signal_average(t_series_groups[i], l_series_groups[i])
+                    l_avg_groups.append(l_avg)
+                    l_dev_groups.append(l_dev)
+
+                prev_t_end = 0
+
+                for i in range(len(t_avg_groups)):
+                    t_avg_groups[i] = [t - t_avg_groups[i][0] + prev_t_end for t in t_avg_groups[i]]
+                    prev_t_end = t_avg_groups[i][-1]
+
+                if save_steps:
+                    for i in range(len(t_avg_groups)):
+                        plt.plot(t_avg_groups[i], e_avg_groups[i])
+                    plt.savefig('out/step4e.png')
+                    plt.show()
+
+                    for i in range(len(t_avg_groups)):
+                        plt.plot(t_avg_groups[i], l_avg_groups[i])
+                    plt.savefig('out/step4l.png')
+                    plt.show()
+
+                t_avg_values = []
+                e_avg_values = []
+                e_dev_values = []
+                l_avg_values = []
+                l_dev_values = []
+
+                for i in range(len(t_avg_groups)):
+                    t_avg_values.extend(t_avg_groups[i])
+                    e_avg_values.extend(e_avg_groups[i])
+                    e_dev_values.extend(e_dev_groups[i])
+                    l_avg_values.extend(l_avg_groups[i])
+                    l_dev_values.extend(l_dev_groups[i])
 
                 if save_steps:
                     plt.plot(t_avg_values, e_avg_values)
-                    plt.savefig('out/step3e.png')
+                    plt.savefig('out/step5e.png')
                     plt.show()
 
                     plt.plot(t_avg_values, l_avg_values)
-                    plt.savefig('out/step3l.png')
+                    plt.savefig('out/step5l.png')
                     plt.show()
 
                 sheet_name_avg = f'{sheet_name}_avg'
