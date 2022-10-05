@@ -37,7 +37,7 @@ class WorkbookWrapper:
         values = [v for v in values if v is not None]
         return np.array(values)
 
-    def write_single_series(self, base_cell: Cell, values: ndarray, override_sheet=None):
+    def write_single_series(self, base_cell: Cell, values: list, override_sheet=None):
         sheet = self.workbook[override_sheet] if override_sheet else self.sheet
 
         for n in range(len(values)):
