@@ -27,7 +27,9 @@ def main():
                 t_series = workbook.load_single_series(Cell(dataset['t']))
                 e_series = workbook.load_single_series(Cell(dataset['E']))
                 l_series = workbook.load_single_series(Cell(dataset['L']))
-                minima, _ = find_peaks(-e_series)
+
+                minima, _ = find_peaks(-e_series, distance=50, width=5)
+
                 if plot_steps:
                     plt.plot(t_series, e_series)
                     plt.plot(t_series[minima], e_series[minima], '.')
